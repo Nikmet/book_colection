@@ -3,3 +3,9 @@
     font-size: 18px;
     color: #a1a1a1;
 }
+
+.cards {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 25px 20px;
+}

@@ -1183,10 +1183,44 @@
         }
     }
 
-    class CardList extends DivComponent {
-        constructor(state, parentState) {
+    class Card extends DivComponent {
+        constructor(appState, cardState) {
             super();
-            this.state = state;
+            this.appState = appState;
+            this.cardState = cardState;
+        }
+
+        render() {
+            this.el.classList.add("card");
+
+            const exsistInFavoritse = this.appState.favorites.find(b => b.key == this.cardState.key);
+
+            this.el.innerHTML = `
+            <div class="card__img">
+                <img 
+                src="https://covers.openlibrary.org/b/olid/${this.cardState.cover_edition_key}-M.jpg" 
+                alt="cover">
+            </div>
+            <div class="card__info">
+                <div class="card__tag">${this.cardState.subject ? this.cardState.subject[0] : "Не задано"}</div>
+                <div class="card__title">${this.cardState.title}</div>
+                <div class="card__author">${this.cardState.author_name ? this.cardState.author_name[0] : "Не задано"}</div>
+                <div class="card__footer">
+                    <button class="button_add ${exsistInFavoritse ? "button_add-active" : ""}">
+                        ${exsistInFavoritse ? `<img src="./static/favorite-active.svg" alt="Избранное">` : `<img src="./static/favorite-unactive.svg" alt="Избранное">`}
+                    </button>
+                </div>
+            </div>
+        `;
+
+            return this.el;
+        }
+    }
+
+    class CardList extends DivComponent {
+        constructor(appState, parentState) {
+            super();
+            this.appState = appState;
             this.parentState = parentState;
         }
 
@@ -1201,9 +1235,15 @@
             }
             this.el.innerHTML = `
                 <h2 class="cards-list__title">
-                    Найдено книг – ${this.parentState.list.length}
+                    Найдено книг – ${this.parentState.numFound}
                 </h2>
+                <div class="cards"></div>
             `;
+
+            for (const card of this.parentState.list) {
+                this.el.querySelector(".cards").append(new Card(this.appState, card).render());
+            }
+
             return this.el;
         }
     }
@@ -1211,6 +1251,7 @@
     class MainView extends AbstractView {
         state = {
             list: [],
+            numFound: 0,
             loading: false,
             searchQuery: undefined,
             offset: 0,
@@ -1236,8 +1277,12 @@
                 const data = await this.loadList(this.state.searchQuery, this.state.offset);
                 this.state.loading = false;
                 this.state.list = data.docs;
+                this.state.numFound = data.numFound;
             }
             if (path === "loading") {
+                this.render();
+            }
+            if (path === "numFound") {
                 this.render();
             }
             if (path === "list") {
