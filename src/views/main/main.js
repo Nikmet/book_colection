@@ -21,6 +21,11 @@ export class MainView extends AbstractView {
         this.seTitle("Поиск книг");
     }
 
+    destroy() {
+        onChange.unsubscribe(this.appState);
+        onChange.unsubscribe(this.state);
+    }
+
     appStateHook(path) {
         if (path === "favorites") {
             this.render();
@@ -57,6 +62,14 @@ export class MainView extends AbstractView {
         this.app.append(main);
         this.renderHeader();
         main.append(new Search(this.state).render());
+        const title = document.createElement("h2");
+        title.classList.add("cards-list__title");
+        title.innerHTML = `
+            <h2 class="cards-list__title">
+                Найдено книг – ${this.state.numFound}
+            </h2>
+        `;
+        main.append(title);
         main.append(new CardList(this.appState, this.state).render());
     }
 

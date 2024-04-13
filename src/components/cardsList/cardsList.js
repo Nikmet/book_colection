@@ -18,12 +18,10 @@ export class CardList extends DivComponent {
             `;
             return this.el;
         }
+
         this.el.innerHTML = `
-                <h2 class="cards-list__title">
-                    Найдено книг – ${this.parentState.numFound}
-                </h2>
-                <div class="cards"></div>
-            `;
+            <div class="cards"></div>
+        `;
 
         for (const card of this.parentState.list) {
             this.el.querySelector(".cards").append(new Card(this.appState, card).render());
