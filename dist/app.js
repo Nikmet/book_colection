@@ -1150,6 +1150,11 @@
             this.state = state;
         }
 
+        search() {
+            const value = this.el.querySelector("input").value;
+            this.state.searchQuery = value;
+        }
+
         render() {
             this.el.classList.add("search");
             this.el.innerHTML = `
@@ -1166,6 +1171,39 @@
                 </button>
             </div>
         `;
+
+            this.el.querySelector("button").addEventListener("click", this.search.bind(this));
+            this.el.querySelector("input").addEventListener("keydown", event => {
+                if (event.code === "Enter") {
+                    this.search();
+                }
+            });
+
+            return this.el;
+        }
+    }
+
+    class CardList extends DivComponent {
+        constructor(state, parentState) {
+            super();
+            this.state = state;
+            this.parentState = parentState;
+        }
+
+        render() {
+            this.el.classList.add("cards-list");
+
+            if (this.parentState.loading) {
+                this.el.innerHTML = `
+                <p class="cards-list__loading-text">Загрузка...</p>
+            `;
+                return this.el;
+            }
+            this.el.innerHTML = `
+                <h2 class="cards-list__title">
+                    Найдено книг – ${this.parentState.list.length}
+                </h2>
+            `;
             return this.el;
         }
     }
@@ -1182,10 +1220,34 @@
             super();
             this.appState = appState;
             this.appState = onChange(this.appState, this.appStateHook.bind(this));
+            this.state = onChange(this.state, this.stateHook.bind(this));
             this.seTitle("Поиск книг");
         }
 
         appStateHook(path) {
+            if (path === "favorites") {
+                console.log(path);
+            }
+        }
+
+        async stateHook(path) {
+            if (path === "searchQuery") {
+                this.state.loading = true;
+                const data = await this.loadList(this.state.searchQuery, this.state.offset);
+                this.state.loading = false;
+                this.state.list = data.docs;
+            }
+            if (path === "loading") {
+                this.render();
+            }
+            if (path === "list") {
+                this.render();
+            }
+        }
+
+        async loadList(q, offset) {
+            const res = await fetch(`https://openlibrary.org/search.json?q=${q}&offset=${offset}`);
+            return res.json();
         }
 
         render() {
@@ -1194,6 +1256,7 @@
             this.app.append(main);
             this.renderHeader();
             main.append(new Search(this.state).render());
+            main.append(new CardList(this.appState, this.state).render());
         }
 
         renderHeader() {
