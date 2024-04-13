@@ -1106,6 +1106,70 @@
     onChange.target = proxy => proxy?.[TARGET] ?? proxy;
     onChange.unsubscribe = proxy => proxy?.[UNSUBSCRIBE] ?? proxy;
 
+    class DivComponent {
+        constructor() {
+            this.el = document.createElement("div");
+        }
+
+        render() {
+            return this.el
+        }
+    }
+
+    class Header extends DivComponent {
+        constructor(appState) {
+            super();
+            this.appState = appState;
+        }
+
+        render() {
+            this.el.classList.add("header");
+            this.el.innerHTML = `
+            <div class="">
+                <img src="./static/logo.svg" alt="logo">
+            </div>
+            <div class="menu">
+                <a href="#" class="menu__item">
+                    <img src="./static/search.svg" alt="search_icon">
+                    Поиск книг
+                </a>
+                <a href="#favorites" class="menu__item">
+                    <img src="./static/favorites.svg" alt="favorites_icon">
+                    Избранное
+                </a>
+                <div class="menu__counter">${this.appState.favorites.length}</div>
+            </div>
+        `;
+            return this.el;
+        }
+    }
+
+    class Search extends DivComponent {
+        constructor(state) {
+            super();
+            this.state = state;
+        }
+
+        render() {
+            this.el.classList.add("search");
+            this.el.innerHTML = `
+            <div class="search__wrapper">
+                <input 
+                    type="text" 
+                    placeholder="Найти книгу или автора...." 
+                    class="search__input" 
+                    value="${this.state.searchQuery ? this.state.searchQuery : ""}"
+                />
+                <img src="./static/search.svg" alt="search-logo">
+                <button aria-label="Искать">
+                    <img src="./static/search-white.svg" alt="search-logo">
+                </button>
+            </div>
+        `;
+            return this.el;
+        }
+    }
+
     class MainView extends AbstractView {
         state = {
             list: [],
@@ -1126,11 +1190,15 @@
 
         render() {
             const main = document.createElement("div");
-            main.innerHTML = `Число книг ${this.appState.favorites.length}`;
             this.app.innerHTML = "";
             this.app.append(main);
+            this.renderHeader();
+            main.append(new Search(this.state).render());
+        }
 
-            this.appState.favorites.push("s");
+        renderHeader() {
+            const header = new Header(this.appState).render();
+            this.app.prepend(header);
         }
     }
 
